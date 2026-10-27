@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="az">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MapColoring — Xəritə Oyunu</title>
+    <style>
+        :root {
+            --bg: #070f28
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            padding: 12px;
+            background: #f4f6fb;
+            font-family: Arial, sans-serif;
+            color: #e7edff
+        }
+
+        .app {
+            max-width: 1400px;
+            margin: auto;
+            background: var(--bg);
+            min-height: 94vh
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 14px 18px;
+            background: #09122d;
+            flex-wrap: wrap
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .brand b {
+            font-size: 21px;
+            color: #a994ff
+        }
+
+        .brand small {
+            display: block;
+            color: #8195c8;
+            font-size: 10px;
+            margin-top: 4px
+        }
+
+        nav {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        button {
+            cursor: pointer;
+            border-radius: 8px
+        }
+
+        nav button {
+            padding: 10px;
+            background: transparent;
+            color: #b7c6eb;
+            border: 1px solid transparent
+        }
+
+        nav button.active,
+        nav button:hover {
+            background: #222d6c;
+            border-color: #3d4db5;
+            color: #fff
+        }
+
+        main {
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 160px minmax(300px, 1fr) 215px;
+            gap: 10px
+        }
+
+        .panel {
+            background: linear-gradient(145deg, #0d1939, #09132e);
+            border: 1px solid #1a2b56;
+            border-radius: 8px;
+            overflow: hidden
+        }
+
+        .side {
+            padding: 12px
+        }
+
+        .label,
+        .right-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 4px 0 14px
+        }
+
+        .level {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #293d77;
+            background: #101f48;
+            color: #a8c8ff;
+            margin: 6px 0;
+            font-weight: bold
+        }
+
+        .level.active {
+            background: #063b3c;
+            border-color: #1cbda0;
+            color: #63e8bd
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #1b2a50;
+            margin: 14px -10px
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #b7c7ed;
+            margin: 12px 0
+        }
+
+        .ico {
+            display: inline-grid;
+            place-items: center;
+            width: 27px;
+            height: 27px;
+            border-radius: 7px;
+            background: #1a2b58
+        }
+
+        .info-row strong {
+            margin-left: auto;
+            color: #fff
+        }
+
+        .map-panel {
+            min-height: 365px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse, #0d2044, #07112a);
+            padding: 8px
+        }
+
+        .map-svg {
+            width: 100%;
+            height: 100%;
+            min-height: 340px;
+            max-height: 430px
+        }
+
+        .region {
+            stroke: #e5efff;
+            stroke-width: 2.1;
+            stroke-linejoin: round;
+            cursor: pointer;
+            transition: filter .15s, opacity .15s
+        }
+
+        .region:hover {
+            filter: brightness(1.2);
+            stroke-width: 3
+        }
+
+        .region-label {
+            font-size: 13px;
+            font-weight: bold;
+            fill: #06132d;
+            text-anchor: middle;
+            pointer-events: none
+        }
+
+        .map-deco {
+            fill: none;
+            stroke: #123f77;
+            stroke-width: 2;
+            opacity: .8
+        }
+
+        .palette {
+            display: flex;
+            gap: 9px;
+            flex-wrap: wrap;
+            margin-bottom: 16px
+        }
+
+        .swatch {
+            height: 28px;
+            width: 28px;
+            border-radius: 50%;
+            border: 2px solid #ffffff20;
+            color: #fff;
+            font-weight: bold;
+            padding: 0
+        }
+
+        .swatch.selected {
+            outline: 2px solid #fff;
+            outline-offset: 2px
+        }
+
+        .action {
+            width: 100%;
+            background: linear-gradient(90deg, #6547ff, #7848f6);
+            color: #fff;
+            border: 0;
+            padding: 12px 8px;
+            font-size: 11px;
+            margin: 4px 0 14px
+        }
+
+        .mini {
+            background: #12234b;
+            border: 1px solid #243b70;
+            border-radius: 9px;
+            padding: 12px;
+            margin: 9px 0
+        }
+
+        .big {
+            font-size: 21px;
+            font-weight: bold;
+            margin-top: 8px
+        }
+
+        .bar {
+            height: 7px;
+            border-radius: 8px;
+            background: #263969;
+            margin-top: 12px;
+            overflow: hidden
+        }
+
+        .bar span {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: #7d62ff
+        }
+
+        .rule {
+            background: #073333;
+            border: 1px solid #10514e;
+            color: #6fe7cb;
+            font-size: 10px;
+            line-height: 1.6;
+            border-radius: 8px;
+            padding: 11px;
+            margin: 10px 0
+        }
+
+        .reset {
+            width: 100%;
+            background: #15244d;
+            border: 1px solid #354b8d;
+            color: #b9cbf7;
+            padding: 10px
+        }
+
+        #status {
+            font-size: 12px;
+            color: #ffe082;
+            min-height: 28px;
+            margin-top: 9px;
+            line-height: 1.5
+        }
+
+        .bottom {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr .85fr;
+            gap: 10px;
+            padding: 0 12px 14px
+        }
+
+        .card {
+            padding: 14px;
+            min-height: 170px
+        }
+
+        .card h3 {
+            font-size: 12px;
+            margin: 0 0 12px
+        }
+
+        .card p,
+        .card li {
+            font-size: 10px;
+            color: #aebfe7;
+            line-height: 1.65
+        }
+
+        .card ul {
+            padding-left: 16px
+        }
+
+        .path {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .dot {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 7px 0;
+            font-size: 10px;
+            color: #afc0e8
+        }
+
+        .legend .dot {
+            width: 17px;
+            height: 17px
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #030817dd;
+            z-index: 20;
+            align-items: center;
+            justify-content: center;
+            padding: 20px
+        }
+
+        .modal-box {
+            max-width: 430px;
+            width: 100%;
+            text-align: center;
+            padding: 30px;
+            background: #101e43;
+            border: 2px solid #ffd166;
+            border-radius: 20px
+        }
+
+        .modal-box h2 {
+            color: #ffd166;
+            font-size: 29px
+        }
+
+        .cup {
+            font-size: 65px
+        }
+
+        @media(max-width:1000px) {
+            main {
+                grid-template-columns: 150px minmax(280px, 1fr)
+            }
+
+            .right-panel {
+                grid-column: 1/-1
+            }
+
+            .bottom {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        @media(max-width:650px) {
+            body {
+                padding: 0
+            }
+
+            main {
+                grid-template-columns: 1fr
+            }
+
+            .map-panel {
+                grid-row: 1
+            }
+
+            .bottom {
+                grid-template-columns: 1fr
+            }
+
+            .level {
+                display: inline-block;
+                width: 31%;
+                text-align: center;
+                padding: 9px 3px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <header>
+            <div class="brand"><span style="font-size:29px">🗺️</span>
+                <div><b>MapColoring</b><small>Axtarış Alqoritmləri ilə Öyrən</small></div>
+            </div>
+            <nav>
+                <button class="active" data-mode="game">🗺️ Xəritə Oyunu</button>
+                <button data-mode="bfs">✥ BFS</button>
+                <button data-mode="dfs">✥ DFS</button>
+                <button data-mode="backtracking">◉ Backtracking</button>
+                <button data-mode="graph">♧ Qraf Rəngləmə</button>
+                <button data-mode="help">▤ Təlimat</button>
+            </nav>
+        </header>
+
+        <main>
+            <section class="panel side">
+                <div class="label">Səviyyə</div>
+                <button class="level active" data-level="easy">▮ Asan</button>
+                <button class="level" data-level="medium">▮ Orta</button>
+                <button class="level" data-level="hard">▮ Çətin</button>
+                <hr>
+                <div class="label">Xəritə məlumatı</div>
+                <div class="info-row"><span class="ico">⬡</span> Ərazi sayı <strong id="areaCount">7</strong></div>
+                <div class="info-row"><span class="ico">⌘</span> Qonşuluq əlaqələri <strong id="edgeCount">0</strong>
+                </div>
+                <div class="info-row"><span class="ico">🎨</span> Minimum rəng sayı <strong id="minCount">3</strong>
+                </div>
+            </section>
+
+            <section class="panel map-panel">
+                <svg class="map-svg" viewBox="0 0 620 420" aria-label="Rənglənən sxematik xəritə">
+                    <g class="map-deco">
+                        <path
+                            d="M390 15 Q420 45 410 65 T438 108 M450 90 Q480 120 467 150 T500 185 M470 280 Q500 315 520 350 T570 400" />
+                        <path d="M480 190 q20 -15 35 0 t30 0 M490 205 q20 -15 35 0 t30 0 M500 220 q20 -15 35 0 t30 0" />
+                    </g>
+                    <text x="500" y="245" fill="#187ac1" font-size="15" font-weight="700">Xəzər dənizi</text>
+                    <g id="regions"></g>
+                    <g id="labels" class="region-label"></g>
+                </svg>
+            </section>
+
+            <section class="panel side right-panel">
+                <div class="right-title">Rəng Palitrası</div>
+                <div class="palette" id="palette"></div>
+                <button class="action" id="pick">🖌 Rəng seç, ✕ ilə sil (sağ klik də silir)</button>
+                <div class="mini">
+                    <div class="right-title">🎨 İstifadə olunan rəng sayı</div>
+                    <div class="big"><span id="used">0</span> / <span id="maxColors">3</span></div>
+                    <div class="bar"><span id="bar"></span></div>
+                </div>
+                <div class="rule">♧ Qayda: Qonşu olan ərazilər eyni rəngdə ola bilməz!</div>
+                <button class="reset" id="reset">⟳ Yenidən başla</button>
+                <div id="status">Başlamaq üçün rəng seç və xəritədə əraziyə kliklə.</div>
+            </section>
+        </main>
+
+        <section class="bottom">
+            <div class="panel card">
+                <h3>📘 Qraf Rəngləmə Problemi</h3>
+                <p>Xəritədəki hər bir ərazi bir qraf düyünüdür. Qonşu olan ərazilər fərqli rəng almalıdır. Məqsəd bütün
+                    əraziləri mümkün olan ən az sayda rənglə boyamaqdır.</p>
+                <button class="action" id="details">Daha ətraflı oxu →</button>
+            </div>
+            <div class="panel card">
+                <h3>🔍 BFS / DFS</h3>
+                <p><b>BFS (Eninə axtarış)</b></p>
+                <ul>
+                    <li>Başlanğıc düyündən başlayır.</li>
+                    <li>Əvvəl yaxın qonşuları ziyarət edir.</li>
+                    <li>Səviyyə-səviyyə irəliləyir.</li>
+                </ul>
+                <p><b>DFS (Dərinliyinə axtarış)</b></p>
+                <ul>
+                    <li>Bir istiqamətdə dərinə gedir.</li>
+                    <li>Sonra geri qayıdır.</li>
+                </ul>
+                <button class="action" id="runSearch">▶ Axtarışı göstər</button>
+            </div>
+            <div class="panel card">
+                <h3>⚙ Backtracking</h3>
+                <p>Hər əraziyə rəng verilir. Qayda pozularsa, əvvəlki addıma qayıdılır və başqa rəng seçilir.</p>
+                <div class="path">
+                    <span class="dot" style="background:#ff555d"></span>→<span class="dot"
+                        style="background:#3888f8"></span>→<span class="dot" style="background:#ffb82f"></span>→<span
+                        class="dot" style="background:#27c28a"></span>
+                </div>
+                <button class="action" id="solve">✨ Backtracking ilə həll et</button>
+            </div>
+            <div class="panel card">
+                <h3>🎨 Mövcud Rənglər</h3>
+                <div id="legend"></div>
+                <hr>
+                <p>🏆 Sizin nəticəniz</p>
+                <b id="result">—</b>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal" id="win">
+        <div class="modal-box">
+            <div class="cup">🏆</div>
+            <h2>TƏBRİKLƏR!</h2>
+            <h3>SƏN QAZANDIN!</h3>
+            <p>Xəritəni düzgün rənglədin.</p>
+            <h2 id="reward">⭐ +1 ulduz</h2>
+            <p id="winInfo"></p>
+            <button class="action" id="closeWin">Davam et</button>
+        </div>
+    </div>
+
+    <script>
+        const palette = [
+            { name: "Qırmızı", c: "#ff555d" },
+            { name: "Mavi", c: "#3888f8" },
+            { name: "Sarı", c: "#ffb82f" },
+            { name: "Yaşıl", c: "#27c28a" },
+            { name: "Bənövşəyi", c: "#9147f5" },
+            { name: "Tünd mavi", c: "#4f63d9" },
+            { name: "Çəhrayı", c: "#ff7ac6" },
+            { name: "Narıncı", c: "#ff8a3d" }
+        ];
+
+        const regionNames = ["Quba", "Qusar", "Şəki", "Mingəçevir", "Bərdə", "Lənkəran", "Gəncə", "Tovuz", "Astara", "Şamaxı", "Naxçıvan", "Zəngilan"];
+
+        const shapes = [
+            "M230 20 L265 13 L292 28 L310 48 L337 53 L355 75 L342 99 L315 111 L288 105 L264 122 L239 111 L220 89 L224 61 Z",
+            "M355 75 L377 56 L400 66 L418 89 L445 103 L450 130 L432 151 L418 174 L397 190 L379 174 L364 151 L342 135 L342 99 Z",
+            "M130 80 L153 63 L178 73 L199 63 L222 75 L224 94 L239 111 L229 133 L207 148 L183 140 L164 153 L143 137 L124 116 Z",
+            "M229 133 L239 111 L264 122 L288 105 L315 111 L342 99 L342 135 L364 151 L354 177 L331 190 L306 182 L285 201 L260 188 L239 168 Z",
+            "M183 140 L207 148 L229 133 L239 168 L260 188 L250 211 L226 225 L201 215 L181 231 L157 219 L137 201 L143 177 L164 153 Z",
+            "M364 151 L379 174 L397 190 L418 174 L430 199 L418 220 L395 234 L374 225 L354 243 L331 225 L331 190 L354 177 Z",
+            "M260 188 L285 201 L306 182 L331 190 L331 225 L354 243 L341 266 L316 276 L292 264 L271 278 L250 258 L250 211 Z",
+            "M137 201 L157 219 L181 231 L201 215 L226 225 L250 211 L250 258 L232 278 L209 292 L186 279 L166 291 L145 272 L126 249 Z",
+            "M418 220 L430 199 L450 220 L459 246 L447 268 L426 280 L408 268 L395 284 L374 270 L374 225 L395 234 Z",
+            "M271 278 L292 264 L316 276 L341 266 L374 270 L395 284 L387 310 L365 326 L339 320 L320 339 L296 326 L279 307 Z",
+            "M186 279 L209 292 L232 278 L250 258 L271 278 L279 307 L261 328 L238 344 L215 335 L198 349 L176 334 L166 311 Z",
+            "M387 310 L395 284 L408 268 L426 280 L447 268 L457 291 L446 316 L426 334 L405 326 L389 345 L365 326 Z"
+        ];
+
+        const labelPositions = [[270, 66], [403, 119], [171, 105], [302, 151], [195, 188], [397, 222], [300, 242], [190, 260], [430, 252], [337, 301], [222, 317], [420, 306]];
+
+        /* ---------- Qonşuluq həndəsədən avtomatik hesablanır ---------- */
+        const polys = shapes.map(s => {
+            const n = s.match(/-?\d+(\.\d+)?/g).map(Number);
+            const pts = [];
+            for (let i = 0; i < n.length; i += 2) pts.push([n[i], n[i + 1]]);
+            return pts;
+        });
+
+        function distToSeg(p, a, b) {
+            const dx = b[0] - a[0], dy = b[1] - a[1];
+            let t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1);
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+        }
+
+        function distToPoly(p, poly) {
+            let m = Infinity;
+            for (let i = 0; i < poly.length; i++)
+                m = Math.min(m, distToSeg(p, poly[i], poly[(i + 1) % poly.length]));
+            return m;
+        }
+
+        // ortaq sərhəd (ən azı 3 yaxın nöqtə) varsa qonşudur; tək küncdə toxunmaq qonşuluq sayılmır
+        const ALL_EDGES = [];
+        for (let i = 0; i < polys.length; i++) {
+            for (let j = i + 1; j < polys.length; j++) {
+                let c = 0;
+                polys[i].forEach(p => { if (distToPoly(p, polys[j]) <= 9) c++; });
+                polys[j].forEach(p => { if (distToPoly(p, polys[i]) <= 9) c++; });
+                if (c >= 3) ALL_EDGES.push([i, j]);
+            }
+        }
+
+        /* ---------- Səviyyələr ---------- */
+        const levels = {
+            easy: { count: 7, max: 8 },
+            medium: { count: 10, max: 7 },
+            hard: { count: 12, max: 7 }
+        };
+
+        for (const key in levels) {
+            const L = levels[key];
+            L.edges = ALL_EDGES.filter(([a, b]) => a < L.count && b < L.count);
+            L.min = chromaticNumber(L.count, L.edges);
+        }
+
+        function colorGraph(n, edges, k) {
+            const r = Array(n).fill(-1);
+            (function go(i) {
+                if (i === n) return true;
+                for (let c = 0; c < k; c++) {
+                    const ok = edges.every(([a, b]) =>
+                        a === i ? r[b] !== c : b === i ? r[a] !== c : true);
+                    if (ok) {
+                        r[i] = c;
+                        if (go(i + 1)) return true;
+                        r[i] = -1;
+                    }
+                }
+                return false;
+            })(0);
+            return r.every(x => x >= 0) ? r : null;
+        }
+
+        function chromaticNumber(n, edges) {
+            for (let k = 1; k <= palette.length; k++)
+                if (colorGraph(n, edges, k)) return k;
+            return palette.length;
+        }
+
+        /* ---------- Vəziyyət ---------- */
+        let level = "easy";
+        let selected = 0;          // -1 = pozan
+        let colors = Array(levels.easy.count).fill(-1);
+        let stars = 0;
+        let won = false;
+        let timers = [];
+
+        const $ = id => document.getElementById(id);
+
+        function neighbors(i) {
+            return levels[level].edges
+                .filter(e => e.includes(i))
+                .map(e => e[0] === i ? e[1] : e[0])
+                .sort((a, b) => a - b);
+        }
+
+        function setStatus(t) { $("status").textContent = t; }
+
+        function clearTimers() {
+            timers.forEach(clearTimeout);
+            timers = [];
+        }
+
+        function buildMap() {
+            $("regions").innerHTML = "";
+            $("labels").innerHTML = "";
+            const NS = "http://www.w3.org/2000/svg";
+
+            for (let i = 0; i < levels[level].count; i++) {
+                const path = document.createElementNS(NS, "path");
+                path.setAttribute("d", shapes[i]);
+                path.setAttribute("class", "region");
+                path.dataset.id = i;
+                path.addEventListener("click", () => paint(i));
+                path.addEventListener("contextmenu", e => { e.preventDefault(); erase(i); });
+                $("regions").appendChild(path);
+
+                const label = document.createElementNS(NS, "text");
+                label.setAttribute("x", labelPositions[i][0]);
+                label.setAttribute("y", labelPositions[i][1]);
+                label.textContent = regionNames[i];
+                $("labels").appendChild(label);
+            }
+        }
+
+        function buildPalette() {
+            $("palette").innerHTML = "";
+            $("legend").innerHTML = "";
+            const max = levels[level].max;
+            if (selected >= max) selected = 0;
+
+            palette.slice(0, max).forEach((p, i) => {
+                const b = document.createElement("button");
+                b.className = "swatch" + (i === selected ? " selected" : "");
+                b.style.background = p.c;
+                b.title = p.name;
+                b.setAttribute("aria-label", p.name);
+                b.onclick = () => {
+                    selected = i;
+                    buildPalette();
+                    setStatus(p.name + " seçildi. Xəritədə əraziyə kliklə.");
+                };
+                $("palette").appendChild(b);
+
+                const row = document.createElement("div");
+                row.className = "legend";
+                row.innerHTML = '<span class="dot" style="background:' + p.c + '"></span>' + p.name;
+                $("legend").appendChild(row);
+            });
+
+            const eraser = document.createElement("button");
+            eraser.className = "swatch" + (selected === -1 ? " selected" : "");
+            eraser.style.background = "#1a2b58";
+            eraser.textContent = "✕";
+            eraser.title = "Rəngi sil";
+            eraser.onclick = () => {
+                selected = -1;
+                buildPalette();
+                setStatus("Silgi seçildi. Rəngini silmək istədiyin əraziyə kliklə.");
+            };
+            $("palette").appendChild(eraser);
+        }
+
+        function render() {
+            document.querySelectorAll(".region").forEach(el => {
+                const i = Number(el.dataset.id);
+                el.style.fill = colors[i] < 0 ? "#243968" : palette[colors[i]].c;
+                el.style.opacity = "1";
+                el.style.filter = "";
+            });
+
+            const L = levels[level];
+            $("areaCount").textContent = L.count;
+            $("edgeCount").textContent = L.edges.length;
+            $("minCount").textContent = L.min;
+            $("maxColors").textContent = L.max;
+
+            const used = new Set(colors.filter(c => c >= 0)).size;
+            $("used").textContent = used;
+            $("bar").style.width = Math.min(100, used / L.max * 100) + "%";
+            $("result").textContent = won ? "Qazanıldı! ⭐ " + stars : "—";
+        }
+
+        function erase(i) {
+            if (won || colors[i] < 0) return;
+            colors[i] = -1;
+            render();
+            setStatus(regionNames[i] + " — rəng silindi.");
+        }
+
+        function paint(i) {
+            if (won) return;
+            clearTimers();
+
+            if (selected === -1) { erase(i); return; }
+
+            const bad = neighbors(i).find(n => colors[n] === selected);
+            if (bad !== undefined) {
+                setStatus("⚠️ " + regionNames[bad] + " qonşusu artıq " +
+                    palette[selected].name + " rəngdədir. Başqa rəng seç.");
+                return;
+            }
+
+            colors[i] = selected;
+            render();
+            setStatus(regionNames[i] + " — " + palette[selected].name + " rənginə boyandı.");
+
+            if (colors.every(c => c >= 0)) checkWin(true);
+        }
+
+        function isValid(cols) {
+            return cols.every(c => c >= 0) &&
+                levels[level].edges.every(([a, b]) => cols[a] !== cols[b]);
+        }
+
+        function checkWin(byPlayer) {
+            if (won || !isValid(colors)) return;
+
+            if (!byPlayer) {
+                setStatus("✅ Backtracking həlli tapdı (ulduz verilmir). Özün cəhd etmək üçün «Yenidən başla».");
+                return;
+            }
+
+            won = true;
+            const earned = level === "easy" ? 1 : level === "medium" ? 2 : 3;
+            stars += earned;
+            render();
+
+            $("reward").textContent = "⭐ +" + earned + " ulduz";
+            $("winInfo").textContent = "Toplam ulduz: " + stars + " ⭐";
+            $("win").style.display = "flex";
+            setStatus("🎉 Əla! Xəritəni düzgün rənglədin.");
+        }
+
+        function reset() {
+            clearTimers();
+            colors = Array(levels[level].count).fill(-1);
+            won = false;
+            buildMap();
+            render();
+            setStatus("Rəng seç və xəritədə əraziləri rənglə.");
+        }
+
+        function setLevel(name) {
+            level = name;
+            selected = 0;
+            document.querySelectorAll(".level").forEach(b =>
+                b.classList.toggle("active", b.dataset.level === name));
+            buildPalette();
+            reset();
+            setStatus("Səviyyə dəyişdi. " + levels[level].count + " ərazi və " +
+                levels[level].max + " rəng var.");
+        }
+
+        document.querySelectorAll(".level").forEach(b =>
+            b.onclick = () => setLevel(b.dataset.level));
+
+        $("reset").onclick = reset;
+        $("closeWin").onclick = () => { $("win").style.display = "none"; };
+
+        function solve() {
+            clearTimers();
+            const L = levels[level];
+            const result = colorGraph(L.count, L.edges, L.max);
+
+            if (!result) {
+                setStatus("Bu səviyyədə həll tapılmadı.");
+                return;
+            }
+
+            won = false;
+            colors = result;
+            render();
+            checkWin(false);
+        }
+
+        $("solve").onclick = solve;
+
+        function traverse(kind) {
+            clearTimers();
+            const n = levels[level].count;
+            const order = [];
+            const seen = new Set();
+
+            for (let start = 0; start < n; start++) {
+                if (seen.has(start)) continue;
+                const list = [start];
+                seen.add(start);            // BFS-də düyün növbəyə girəndə qeyd olunur
+
+                if (kind === "bfs") {
+                    for (let h = 0; h < list.length; h++) {
+                        const node = list[h];
+                        order.push(node);
+                        neighbors(node).forEach(x => {
+                            if (!seen.has(x)) { seen.add(x); list.push(x); }
+                        });
+                    }
+                } else {
+                    seen.delete(start);
+                    const stack = [start];
+                    while (stack.length) {
+                        const node = stack.pop();
+                        if (seen.has(node)) continue;
+                        seen.add(node);
+                        order.push(node);
+                        neighbors(node).slice().reverse().forEach(x => {
+                            if (!seen.has(x)) stack.push(x);
+                        });
+                    }
+                }
+            }
+
+            document.querySelectorAll(".region").forEach(el => { el.style.opacity = ".25"; });
+
+            order.forEach((node, index) => {
+                timers.push(setTimeout(() => {
+                    const el = document.querySelector('.region[data-id="' + node + '"]');
+                    if (el) { el.style.opacity = "1"; el.style.filter = "brightness(1.35)"; }
+                    setStatus(kind.toUpperCase() + " ardıcıllığı: " +
+                        order.slice(0, index + 1).map(x => regionNames[x]).join(" → "));
+                }, index * 400));
+            });
+
+            timers.push(setTimeout(() => {
+                document.querySelectorAll(".region").forEach(el => {
+                    el.style.opacity = "1";
+                    el.style.filter = "";
+                });
+            }, order.length * 400 + 300));
+        }
+
+        document.querySelectorAll("nav button").forEach(button => {
+            button.onclick = () => {
+                document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+                button.classList.add("active");
+                const mode = button.dataset.mode;
+
+                if (mode === "bfs" || mode === "dfs") traverse(mode);
+                else if (mode === "backtracking") solve();
+                else if (mode === "help")
+                    setStatus("Rəng seç, sonra əraziyə kliklə. Qonşular fərqli rəngdə olmalıdır. ✕ və ya sağ klik rəngi silir.");
+                else if (mode === "graph")
+                    setStatus("Ərazilər qrafın düyünləridir, ortaq sərhəd isə kənardır. Qonşular fərqli rəngdə olmalıdır.");
+                else { clearTimers(); render(); setStatus("Xəritə oyunu seçildi."); }
+            };
+        });
+
+        $("runSearch").onclick = () => traverse("bfs");
+        $("details").onclick = () => setStatus("Qraf rəngləmə: qonşu ərazilər eyni rəngdə olmamalıdır. Bu xəritə üçün minimum " + levels[level].min + " rəng kifayətdir.");
+        $("pick").onclick = () => setStatus("Palitradan rəng seç, sonra əraziyə kliklə. ✕ silgidir.");
+
+        buildMap();
+        buildPalette();
+        render();
+    </script>
+</body>
+
+</html>
